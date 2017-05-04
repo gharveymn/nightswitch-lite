@@ -1,5 +1,8 @@
 # Changelog
 
+### 1.0.2
+Still fixing settings
+
 ### 1.0.1
 Changes published background color. Whoops!
 
