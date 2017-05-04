@@ -1,5 +1,8 @@
 # Changelog
 
+### 2.0.1
+I guess I need to be on this version since I messed up the first time
+
 ### 1.0.2
 Still fixing settings
 
