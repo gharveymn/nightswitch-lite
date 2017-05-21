@@ -8,21 +8,31 @@ npm install suncalc
 ~~~
 in this folder.
 
+## Quickstart
+
+Install the extension and go to your preferences, add the settings 
+~~~
+"nightswitch.dayTheme": "[YourDayTheme]"
+"nightswitch.nightTheme": "[YourNightTheme]"
+"nightswitch.location": "([YourLatitude],[YourLongitude])"
+~~~
+
+
+
 ## Extension Settings
 
-
 - `"nightswitch.dayTheme"` 
-	- sets the theme to be shown during the day (eg. "Solarized Light")
+	- sets the theme to be shown during the day (eg. `"Solarized Light"`)
 - `"nightswitch.nightTheme"` 
-	- sets the theme to be shown at night (eg. "Default Dark+")
+	- sets the theme to be shown at night (eg. `"Default Dark+"`)
 - `"nightswitch.location"`
-	- specifies a user defined GPS location in decimal degrees (eg. \"(49.89,-97.14)\")
+	- specifies a user defined GPS location in decimal degrees (eg. `"(49.89,-97.14)"`)
 - `"nightswitch.sunrise"`
-	- manually sets the time to switch theme to day
+	- manually sets the time to switch theme to day, with priority over location (24hr time, eg. `"6:00"`)
 - `"nightswitch.sunset"`
-	- manually sets the time to switch theme to night
+	- manually sets the time to switch theme to night, with priority over location (24hr time, eg. `"18:00"`)
 - `"nightswitch.forceSwitch"`
-	- forces the theme to switch to currently canonical theme, ie. if it is day and you have your theme set to something other than `nightswitch.dayTheme`, resets the theme to `nightswitch.dayTheme`.
+	- forces the theme to switch to currently canonical theme, ie. if it is day and you have your theme set to something other than `nightswitch.dayTheme`, resets the theme to `nightswitch.dayTheme` (default `true`).
 
 
 ## Extension Commands
@@ -34,8 +44,10 @@ in this folder.
 - `Switch to Night Theme`
 	- switches the theme to `nightswitch.nightTheme`
 
-
 ## Changelog
+
+### 2.0.2
+Mistake in manual time settings, probably fixed now.
 
 ### 2.0.1
 I guess I need to be on this version since I messed up the first time

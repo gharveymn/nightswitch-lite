@@ -1,5 +1,9 @@
 # Changelog
 
+
+### 2.0.2
+Mistake in manual time settings, probably fixed now.
+
 ### 2.0.1
 I guess I need to be on this version since I messed up the first time
 

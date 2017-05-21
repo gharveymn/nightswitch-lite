@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 var wbconfig = vscode.workspace.getConfiguration('workbench');
 var nsconfig = vscode.workspace.getConfiguration('nightswitch');
+const unreachable = [644,105];
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -22,6 +23,8 @@ export function activate(context: vscode.ExtensionContext) {
 	var srisemanual = -1
 	var ssetmanual = -1
 	var srisetmrwmanual = -1
+	var ssettmrwmanual = -1
+	
 	if (srisestr != null) {
 		srisemanual = parseManualTime(srisestr,time)
 		srisetmrwmanual = srisemanual+24*60*60*1000
@@ -29,12 +32,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	if (ssetstr != null) {
 		ssetmanual = parseManualTime(ssetstr,time)
+		ssettmrwmanual = ssetmanual+24*60*60*1000
 	}
 
-	const manualTimes = [srisemanual,ssetmanual,srisetmrwmanual]
+	const manualTimes = [srisemanual,ssetmanual,srisetmrwmanual,ssettmrwmanual]
 	const forceSwitch = nsconfig.get<boolean>('forceSwitch')
 
-
+	
 	if (nsconfig.get('location') != null) {
 		console.log('NSL: running location');
 		const coords = parseCoordinates(nsconfig.get<string>('location'))
@@ -46,6 +50,12 @@ export function activate(context: vscode.ExtensionContext) {
 			console.log('NSL: (' + coords[0] + ',' + coords[1] + ')');
 			locationSwitch(coords, time, SunCalc, manualTimes, forceSwitch)
 		}
+	}
+	else if (nsconfig.get('sunrise') != null || nsconfig.get('sunset') != null) {
+		console.log('NSL: running manual sunrise or sunset')
+
+		//set coords to unreachable value
+		locationSwitch(unreachable, time, SunCalc, manualTimes, forceSwitch)
 	}
 	console.info('NSL: NightSwitch-Lite is now active!');
 }
@@ -69,16 +79,19 @@ function parseManualTime(date: string, time: Date):number {
 
 async function locationSwitch(coords: Number[], time: Date, SunCalc: any, 
 					manualTimes: number[], forceSwitch: boolean) {
-
-	var stimes = SunCalc.getTimes(time, coords[0], coords[1]);
+	
+	if(coords != unreachable) {
+		var stimes = SunCalc.getTimes(time, coords[0], coords[1]);
+	}
 
 	const currtime = time.getTime()
 
 	var srise = manualTimes[0]
 	var sset = manualTimes[1]
 	var srisetmrw = manualTimes[2]
+	var ssettmrw = manualTimes[3]
 	
-	if (srise=== -1)
+	if (srise=== -1 && coords != unreachable)
 	{
 		srise = stimes.sunrise.getTime()
 		// set a virtual time 12hrs from now to get sunrise tomorrow
@@ -87,23 +100,25 @@ async function locationSwitch(coords: Number[], time: Date, SunCalc: any,
 		srisetmrw = stimestmrw.sunrise.getTime()
 	}
 
-	if (sset === -1)
+	if (sset === -1 && coords != unreachable)
 	{
 		sset = stimes.sunset.getTime();
+		//If we have location then we never should need sunset tomorrow
 	}
 
 	console.log('NSL: current time: ' + currtime)
 	console.log('NSL: sunrise: ' + srise)
 	console.log('NSL: sunset: ' + sset)
 	console.log('NSL: sunrise tomorrow: ' + srisetmrw)
+	console.log('NSL: sunset tomorrow: ' + ssettmrw)
 
-	await timeSwitch(currtime, srise, sset, srisetmrw, forceSwitch)
+	await timeSwitch(currtime, srise, sset, srisetmrw, ssettmrw, forceSwitch)
 	reload()
 	locationSwitch(coords, new Date(), SunCalc, manualTimes, forceSwitch)
 }
 
 
-async function timeSwitch(currtime: number, srise: number, sset: number, srisetmrw: number, forceSwitch: boolean) {
+async function timeSwitch(currtime: number, srise: number, sset: number, srisetmrw: number, ssettmrw: number, forceSwitch: boolean) {
 	const timeToSunrise = srise - currtime,
 		timeToSunset = sset - currtime;
 
@@ -132,16 +147,27 @@ async function timeSwitch(currtime: number, srise: number, sset: number, srisetm
 	}
 	else {
 		// this means it's after sunset but before midnight
-
-		if (forceSwitch) {
+		// if we are using manual time but dont specify one of them without location, then we don't assume anything
+		
+		if (forceSwitch && !(srise==-1 || sset==-1)) {
 			setThemeNight()
 		}
-		console.log('NSL: waiting until sunrise tomorrow...')
-		console.log('NSL: sunrise tomorrow: ' + srisetmrw)
-		const timeToSunriseTmrw = srisetmrw - currtime
-		console.log('NSL: timeToSunriseTmrw: ' + timeToSunriseTmrw)
-		await sleep(timeToSunriseTmrw)
-		setThemeDay()
+		if(srise==-1) {
+			console.log('NSL: waiting until sunset tomorrow...')
+			console.log('NSL: sunset tomorrow: ' + ssettmrw)
+			const timeToSunsetTmrw = ssettmrw - currtime
+			console.log('NSL: timeToSunsetTmrw: ' + timeToSunsetTmrw)
+			await sleep(timeToSunsetTmrw)
+			setThemeNight()
+		}
+		else {
+			console.log('NSL: waiting until sunrise tomorrow...')
+			console.log('NSL: sunrise tomorrow: ' + srisetmrw)
+			const timeToSunriseTmrw = srisetmrw - currtime
+			console.log('NSL: timeToSunriseTmrw: ' + timeToSunriseTmrw)
+			await sleep(timeToSunriseTmrw)
+			setThemeDay()
+		}
 	}
 }
 
