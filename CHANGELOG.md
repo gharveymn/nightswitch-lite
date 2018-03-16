@@ -1,5 +1,7 @@
 # Changelog
 
+### 2.1.0
+Fixes issue where the theme wouldn't update after coming out of restore on Linux.
 
 ### 2.0.2
 Mistake in manual time settings, probably fixed now.

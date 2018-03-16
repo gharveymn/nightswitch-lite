@@ -1,35 +1,33 @@
 'use strict';
-import * as vscode from 'vscode';
+import {workspace, window, commands, ExtensionContext} from 'vscode';
 
-var stateListener = function(event){
-	recheck();
-};
+const SunCalc = require('suncalc');
 
-var wbconfig = vscode.workspace.getConfiguration('workbench');
-var nsconfig = vscode.workspace.getConfiguration('nightswitch');
-var SunCalc;
-var time;
+var wbconfig = workspace.getConfiguration('workbench');
+var nsconfig = workspace.getConfiguration('nightswitch');
+var autoSwitch, time, hasShownEnableMsgOnce;
 const unreachable = [644, 105];
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: ExtensionContext)
+{
+	hasShownEnableMsgOnce = false;
 
-	let toggle = makeToggle();
-	let switchDay = makeSwitchDay();
-	let switchNight = makeSwitchNight();
-	let windowStateCheck = vscode.window.onDidChangeActiveTextEditor(recheck);
+	autoSwitch = nsconfig.get<boolean>('autoSwitch')
+	context.subscriptions.push(makeToggle());
+	context.subscriptions.push(makeSwitchDay());
+	context.subscriptions.push(makeSwitchNight());
+	context.subscriptions.push(enableAutoSwitch());
+	context.subscriptions.push(window.onDidChangeWindowState(recheck));
+	context.subscriptions.push(window.onDidChangeActiveTextEditor(recheck));
+	context.subscriptions.push(window.onDidChangeTextEditorViewColumn(recheck));
 
-	context.subscriptions.push(toggle);
-	context.subscriptions.push(switchDay);
-	context.subscriptions.push(switchNight);
-	context.subscriptions.push(windowStateCheck);
-
-	SunCalc = require('suncalc')
 	recheck();
-	console.info('NSL: NightSwitch-Lite is now active!');
+	console.info('NightSwitch-Lite is now active!');
 }
 
 
-function parseManualTime(date: string, time: Date): number {
+function parseManualTime(date: string, time: Date): number
+{
 	const hm = date.split(':')
 	const fullTime = time.getTime()
 	const currentHours = time.getHours() * 60 * 60 * 1000
@@ -45,158 +43,221 @@ function parseManualTime(date: string, time: Date): number {
 }
 
 
-function locationSwitch(coords: Number[], manualTimes: number[], forceSwitch: boolean) 
-	{
+function locationSwitch(coords: Number[], manualTimes: number[]) 
+{
 
-	if (coords != unreachable) {
+	// if autoSwitch is turned off then return immediately
+	if(!autoSwitch)
+	{
+		return;
+	}
+
+	// if coords are set then get the sun times
+	if(coords != unreachable)
+	{
 		var stimes = SunCalc.getTimes(time, coords[0], coords[1]);
 	}
 
+	// get the current time
 	const currtime = time.getTime()
 
-	let srise = manualTimes[0]
-	let sset = manualTimes[1]
-	let srisetmrw = manualTimes[2]
-	let ssettmrw = manualTimes[3]
+	let srise = manualTimes[0],
+		sset = manualTimes[1],
+		srisetmrw = manualTimes[2],
+		ssettmrw = manualTimes[3];
 
-	if (srise === -1 && coords != unreachable) {
+	// if manual sunrise is not set and the coordinates are set then get the time of sunrise
+	if(srise === -1 && coords != unreachable)
+	{
 		srise = stimes.sunrise.getTime()
-		// set a virtual time 12hrs from now to get sunrise tomorrow
-		const virtualtime = currtime + 24 * 60 * 60 * 1000;
-		var stimestmrw = SunCalc.getTimes(new Date(virtualtime), coords[0], coords[1]);
-		srisetmrw = stimestmrw.sunrise.getTime()
 	}
 
-	if (sset === -1 && coords != unreachable) {
+	// get the time of sunset
+	if(sset === -1 && coords != unreachable)
+	{
 		sset = stimes.sunset.getTime();
-		//If we have location then we never should need sunset tomorrow
 	}
 
-	console.log('NSL: current time: ' + currtime)
-	console.log('NSL: sunrise: ' + srise)
-	console.log('NSL: sunset: ' + sset)
+	timeSwitch(currtime, srise, sset)
 
-	timeSwitch(currtime, srise, sset, srisetmrw, ssettmrw, forceSwitch)
 }
 
 
-function timeSwitch(currtime: number, srise: number, sset: number, srisetmrw: number, ssettmrw: number, forceSwitch: boolean) {
+function timeSwitch(currtime: number, srise: number, sset: number)
+{
 	const timeToSunrise = srise - currtime,
 		timeToSunset = sset - currtime;
 
-	if (timeToSunrise > 0) {
+	if(timeToSunrise > 0)
+	{
 		// obviously give priority to sunrise
 		setThemeNight()
 	}
-	else if (timeToSunset > 0) {
-			setThemeDay()
+	else if(timeToSunset > 0)
+	{
+		setThemeDay()
 	}
-	else {
+	else
+	{
 		// this means it's after sunset but before midnight
 		// if we are using manual time but dont specify one of them without location, then we don't assume anything
 
-		if (!(srise == -1 || sset == -1)) {
+		if(!(srise == -1 || sset == -1))
+		{
 			setThemeNight()
 		}
 	}
 }
 
 
-function makeToggle() {
-	return vscode.commands.registerCommand('extension.toggleTheme', () => {
-		reload()
-		var currentTheme = wbconfig.get<string>('colorTheme'),
-			dayTheme = nsconfig.get<string>('dayTheme'),
-			nightTheme = nsconfig.get<string>('nightTheme');
+function makeToggle()
+{
+	return commands.registerCommand('extension.toggleTheme', () =>
+	{
+		reloadConfig()
+		var currentTheme = wbconfig.get<string>('colorTheme')
 
-		if (currentTheme === dayTheme) {
+		if(currentTheme === nsconfig.get<string>('dayTheme'))
+		{
 			setThemeNight()
+			autoSwitch = false;
 		}
-		else if (currentTheme === nightTheme) {
+		else if(currentTheme === nsconfig.get<string>('nightTheme'))
+		{
 			setThemeDay()
+			autoSwitch = false;
 		}
-		else {
-			vscode.window.showInformationMessage('Your current theme is not set to either your day or night theme. Please update your settings.');
+		else
+		{
+			window.showInformationMessage('Your current theme is not set to either your day or night theme. Please update your settings.');
 		}
+
+		if(!autoSwitch && !hasShownEnableMsgOnce)
+		{
+			showAutoSwitchMsg();
+		}
+
 	});
 }
 
 
-function makeSwitchDay() {
-	return vscode.commands.registerCommand('extension.switchDay', () => {
+function makeSwitchDay()
+{
+	return commands.registerCommand('extension.switchDay', () =>
+	{
 		setThemeDay()
+		autoSwitch = false;
+
+		if(!hasShownEnableMsgOnce)
+		{
+			showAutoSwitchMsg();
+		}
+
 	});
 }
 
 
-function makeSwitchNight() {
-	return vscode.commands.registerCommand('extension.switchNight', () => {
+function makeSwitchNight()
+{
+	return commands.registerCommand('extension.switchNight', () =>
+	{
 		setThemeNight()
+		autoSwitch = false;
+
+		if(!hasShownEnableMsgOnce)
+		{
+			showAutoSwitchMsg();
+		}
+
+	});
+}
+
+function enableAutoSwitch()
+{
+	return commands.registerCommand('extension.enableAutoSwitch', () =>
+	{
+		autoSwitch = true;
+		recheck();
 	});
 }
 
 
-function parseCoordinates(coords: string): number[] {
+function parseCoordinates(coords: string): number[]
+{
 	const splcoords = coords.replace(/\(|\)/g, '').split(/,/);
 	return new Array(Number(splcoords[0]), Number(splcoords[1]))
 }
 
 
-function setThemeNight() {
-	wbconfig.update('colorTheme', nsconfig.get<string>('nightTheme'), true);
+function setThemeNight()
+{
+	wbconfig.update('colorTheme', nsconfig.get<string>('nightTheme'), true)
 }
 
 
-function setThemeDay() {
-	wbconfig.update('colorTheme', nsconfig.get<string>('dayTheme'), true);
+function setThemeDay()
+{
+	wbconfig.update('colorTheme', nsconfig.get<string>('dayTheme'), true)
+}
+
+function showAutoSwitchMsg()
+{
+	window.showInformationMessage('Automatic switching has been disabled. To reenable, use the command "Enable Automatic Theme Switching".', 'Click here to reenable').then(fulfilled => {autoSwitch = true; recheck();});
+	hasShownEnableMsgOnce = true;
 }
 
 function recheck()
 {
-	reload()
+	reloadConfig()
+	
 	const srisestr = nsconfig.get<string>('sunrise')
 	const ssetstr = nsconfig.get<string>('sunset')
+	
+	time = new Date()
 
-	time = new Date();
-	let srisemanual = -1
-	let ssetmanual = -1
-	let srisetmrwmanual = -1
-	let ssettmrwmanual = -1
+	let srisemanual = -1, 
+		ssetmanual = -1, 
+		srisetmrwmanual = -1, 
+		ssettmrwmanual = -1;
 
-	if (srisestr != null) {
+	if(srisestr != null)
+	{
 		srisemanual = parseManualTime(srisestr, time)
 		srisetmrwmanual = srisemanual + 24 * 60 * 60 * 1000
 	}
 
-	if (ssetstr != null) {
+	if(ssetstr != null)
+	{
 		ssetmanual = parseManualTime(ssetstr, time)
 		ssettmrwmanual = ssetmanual + 24 * 60 * 60 * 1000
 	}
 
 	const manualTimes = [srisemanual, ssetmanual, srisetmrwmanual, ssettmrwmanual]
-	const forceSwitch = nsconfig.get<boolean>('forceSwitch')
 
-	if (nsconfig.get('location') != null) {
+	if(nsconfig.get('location') != null)
+	{
 		const coords = parseCoordinates(nsconfig.get<string>('location'))
-		if (Number.isNaN(coords[0]) || Number.isNaN(coords[1])) {
-			vscode.window.showWarningMessage('Set your coordinates in the form \"(xxx.xxxx,yyy.yyyy)\" for proper usage of NightSwitch-lite.')
+		if(Number.isNaN(coords[0]) || Number.isNaN(coords[1]))
+		{
+			window.showWarningMessage('Set your coordinates in the form \"(xxx.xxxx,yyy.yyyy)\" for proper usage of NightSwitch-lite.')
 		}
-		else {
-			console.log('NSL: (' + coords[0] + ',' + coords[1] + ')');
-			locationSwitch(coords, manualTimes, forceSwitch)
+		else
+		{
+			locationSwitch(coords, manualTimes)
 		}
 	}
-	else if (nsconfig.get('sunrise') != null || nsconfig.get('sunset') != null) {
-
+	else if(nsconfig.get('sunrise') != null || nsconfig.get('sunset') != null)
+	{
 		//set coords to unreachable value
-		locationSwitch(unreachable, manualTimes, forceSwitch)
+		locationSwitch(unreachable, manualTimes)
 	}
 }
 
 
-function reload() {
+function reloadConfig()
+{
 	// get the current workbench configuration
-	wbconfig = vscode.workspace.getConfiguration('workbench');
+	wbconfig = workspace.getConfiguration('workbench');
 	// get the user config for nightswitch
-	nsconfig = vscode.workspace.getConfiguration('nightswitch');
+	nsconfig = workspace.getConfiguration('nightswitch');
 }
