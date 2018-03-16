@@ -2,22 +2,20 @@
 
 This is a lighter version of [NightSwitch](https://marketplace.visualstudio.com/items?itemName=gharveymn.nightswitch) without geolocation. It is much, much smaller because of that. You probably don't want to install both but I'm not your mom.
 
-Note for GitHub: This extension requires the node module `suncalc`. Install it with 
+Note for GitHub clones: This extension requires the node module `suncalc`. Install it with 
 ~~~
 npm install suncalc
 ~~~
-in this folder.
+in this folder. You'll also need the .vscode folder, which you can create using Yeoman or something.
 
 ## Quickstart
 
-Install the extension and go to your preferences, add the settings 
+Install the extension and go to your preferences. Add the settings 
 ~~~
 "nightswitch.dayTheme": "[YourDayTheme]"
 "nightswitch.nightTheme": "[YourNightTheme]"
 "nightswitch.location": "([YourLatitude],[YourLongitude])"
 ~~~
-
-
 
 ## Extension Settings
 

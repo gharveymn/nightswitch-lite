@@ -2,13 +2,13 @@
     "name": "nightswitch-lite",
     "displayName": "NightSwitch-Lite",
     "description": "Switches between day and night based on location/time specified by the user.",
-    "version": "2.0.3",
+    "version": "2.1.0",
     "publisher": "gharveymn",
     "author": {
         "name": "Gene Harvey",
         "email": "gharveymn@gmail.com"
     },
-    "icon": "icon/icon.svg",
+    "icon": "icon/icon.ico",
     "galleryBanner": {
         "color": "#2d5071",
         "theme": "dark"
@@ -19,7 +19,7 @@
         "url": "https://github.com/gharveymn/nightswitch-lite"
     },
     "engines": {
-        "vscode": "^1.11.0"
+        "vscode": "^1.16.0"
     },
     "categories": [
         "Other"
@@ -41,10 +41,14 @@
             {
                 "command": "extension.switchNight",
                 "title": "Switch to Night Theme"
+            },
+            {
+                "command": "extension.enableAutoSwitch",
+                "title": "Enable Automatic Theme Switching"
             }
         ],
         "configuration": {
-            "title": "NightSwitch",
+            "title": "NightSwitch-lite",
             "properties": {
                 "nightswitch.dayTheme": {
                     "type": "string",
@@ -70,7 +74,7 @@
                         "null"
                     ],
                     "default": null,
-                    "description": "(Priority 1) Manually set the time of sunrise. Accepts 24-Hour format \"HH:MM\""
+                    "description": "(Priority 1) Manually set the time of sunrise. Accepts 24-Hour format \"HH:MM\" (eg. \"06:30\")."
                 },
                 "nightswitch.sunset": {
                     "type": [
@@ -78,12 +82,12 @@
                         "null"
                     ],
                     "default": null,
-                    "description": "(Priority 1) Manually set the time of sunset. Accepts 24-Hour format \"HH:MM\", (eg. \"18:30\")"
+                    "description": "(Priority 1) Manually set the time of sunset. Accepts 24-Hour format \"HH:MM\" (eg. \"18:30\")."
                 },
-                "nightswitch.forceSwitch": {
+                "nightswitch.autoSwitch": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Force the theme to switch to day or night (eg. true implies if VSCode has different theme in middle of day, forces switch to dayTheme)"
+                    "description": "Automatically switch the theme to day or night (if VSCode has different theme in middle of day, automatically switches to dayTheme)."
                 }
             }
         }
@@ -98,11 +102,11 @@
         "suncalc": "^1.8.0"
     },
     "devDependencies": {
-        "typescript": "^2.0.3",
-        "vscode": "^1.0.0",
+        "@types/mocha": "^2.2.48",
+        "@types/node": "^6.0.102",
         "mocha": "^2.3.3",
-        "@types/node": "^6.0.40",
-        "@types/mocha": "^2.2.32"
+        "typescript": "^2.7.2",
+        "vscode": "^1.1.13"
     },
     "__metadata": null
 }
