@@ -180,8 +180,9 @@ function recheck()
 
 	reloadConfig();
 
-	const currdate = new Date();
-	const coords = parseCoordinates(nsconfig.get<string>('location'));
+	const currdate = new Date(),
+		 coords = parseCoordinates(nsconfig.get<string>('location'));
+
 	if(coords != null && (Number.isNaN(coords[0]) || Number.isNaN(coords[1])))
 	{
 		window.showWarningMessage("Please set your coordinates in decimal degrees so that NightSwitch-lite can parse them (example: \"(49.89,-97.14)\").");
@@ -195,7 +196,14 @@ function recheck()
 
 	if(coords != null)
 	{
+
+		const tmp_hours = currdate.getHours();
+		currdate.setHours(12);
+
 		const calculatedTimes = SunCalc.getTimes(currdate, coords[0], coords[1]);
+
+		currdate.setHours(tmp_hours);
+
 		srisetime = calculatedTimes.sunrise.getTime();
 		ssettime = calculatedTimes.sunset.getTime();
 
