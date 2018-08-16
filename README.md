@@ -1,4 +1,4 @@
-# nightswitch-lite README
+# NightSwitch-Lite
 
 This is a lighter version of [NightSwitch](https://marketplace.visualstudio.com/items?itemName=gharveymn.nightswitch) without geolocation. It is much, much smaller because of that. You probably don't want to install both but I'm not your mom.
 
@@ -70,7 +70,7 @@ I guess I need to be on this version since I messed up the first time.
 Still fixing settings.
 
 ### 1.0.1
-Changes published background color. Whoops!
+Changes published background color.
 
 ### 2.0.0
 Initial commit. Everything should be the same as with NightSwitch, but without geolocation.

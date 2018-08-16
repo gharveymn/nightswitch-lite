@@ -25,7 +25,7 @@ I guess I need to be on this version since I messed up the first time.
 Still fixing settings.
 
 ### 1.0.1
-Changes published background color. Whoops!
+Changes published background color.
 
 ### 2.0.0
 Initial commit. Everything should be the same as with NightSwitch, but without geolocation.
