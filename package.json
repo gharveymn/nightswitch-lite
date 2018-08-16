@@ -2,7 +2,7 @@
     "name": "nightswitch-lite",
     "displayName": "NightSwitch-Lite",
     "description": "Switches between day and night based on location/time specified by the user.",
-    "version": "2.1.2",
+    "version": "2.1.3",
     "publisher": "gharveymn",
     "author": {
         "name": "Gene Harvey",
@@ -102,9 +102,9 @@
         "suncalc": "^1.8.0"
     },
     "devDependencies": {
-        "@types/node": "^6.0.102",
-        "typescript": "^2.7.2",
-        "vscode": "^1.1.13"
+        "@types/node": "^6.0.116",
+        "typescript": "^2.9.2",
+        "vscode": "^1.1.21"
     },
     "__metadata": null
 }

@@ -1,5 +1,8 @@
 # Changelog
 
+### 2.1.3
+Updates to remove a security vulnerability in one of the dependencies.
+
 ### 2.1.2
 Adds code to automatically check in the background every 5 minutes so your eyeballs aren't seared after returning.
 
