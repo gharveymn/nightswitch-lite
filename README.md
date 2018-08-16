@@ -45,6 +45,9 @@ in this folder. You'll also need the .vscode folder, which you can create using 
 
 ## Changelog
 
+### 2.1.4
+Fixes bug where the sunrise and sunset calculations would be for the wrong day.
+
 ### 2.1.3
 Updates to remove a security vulnerability in one of the dependencies.
 
@@ -61,10 +64,10 @@ Fixes issue where theme would not consistently update after system sleep.
 Mistake in manual time settings, probably fixed now.
 
 ### 2.0.1
-I guess I need to be on this version since I messed up the first time
+I guess I need to be on this version since I messed up the first time.
 
 ### 1.0.2
-Still fixing settings
+Still fixing settings.
 
 ### 1.0.1
 Changes published background color. Whoops!
