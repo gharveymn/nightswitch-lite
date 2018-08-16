@@ -2,13 +2,13 @@
     "name": "nightswitch-lite",
     "displayName": "NightSwitch-Lite",
     "description": "Switches between day and night based on location/time specified by the user.",
-    "version": "2.1.0",
+    "version": "2.1.2",
     "publisher": "gharveymn",
     "author": {
         "name": "Gene Harvey",
         "email": "gharveymn@gmail.com"
     },
-    "icon": "icon/icon.ico",
+    "icon": "icon/icon.png",
     "galleryBanner": {
         "color": "#2d5071",
         "theme": "dark"
@@ -66,7 +66,7 @@
                         "null"
                     ],
                     "default": null,
-                    "description": "(Priority 2) Specifies the user location in decimal degrees. Example input: \"(49.89,-97.14)\"."
+                    "description": "Specifies the user location in decimal degrees. Example input: \"(49.89,-97.14)\"."
                 },
                 "nightswitch.sunrise": {
                     "type": [
@@ -74,7 +74,7 @@
                         "null"
                     ],
                     "default": null,
-                    "description": "(Priority 1) Manually set the time of sunrise. Accepts 24-Hour format \"HH:MM\" (eg. \"06:30\")."
+                    "description": "Manually set the time of sunrise. Accepts 24-Hour format \"HH:MM\" (eg. \"06:30\")."
                 },
                 "nightswitch.sunset": {
                     "type": [
@@ -82,12 +82,12 @@
                         "null"
                     ],
                     "default": null,
-                    "description": "(Priority 1) Manually set the time of sunset. Accepts 24-Hour format \"HH:MM\" (eg. \"18:30\")."
+                    "description": "Manually set the time of sunset. Accepts 24-Hour format \"HH:MM\" (eg. \"18:30\")."
                 },
                 "nightswitch.autoSwitch": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Automatically switch the theme to day or night (if VSCode has different theme in middle of day, automatically switches to dayTheme)."
+                    "description": "Automatically switch the theme to day or night (if VSCode has different theme in middle of day, automatically switches to nightswitch.dayTheme)."
                 }
             }
         }
@@ -102,9 +102,7 @@
         "suncalc": "^1.8.0"
     },
     "devDependencies": {
-        "@types/mocha": "^2.2.48",
         "@types/node": "^6.0.102",
-        "mocha": "^2.3.3",
         "typescript": "^2.7.2",
         "vscode": "^1.1.13"
     },

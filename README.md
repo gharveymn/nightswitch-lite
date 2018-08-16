@@ -2,12 +2,6 @@
 
 This is a lighter version of [NightSwitch](https://marketplace.visualstudio.com/items?itemName=gharveymn.nightswitch) without geolocation. It is much, much smaller because of that. You probably don't want to install both but I'm not your mom.
 
-Note for GitHub clones: This extension requires the node module `suncalc`. Install it with 
-~~~
-npm install suncalc
-~~~
-in this folder. You'll also need the .vscode folder, which you can create using Yeoman or something.
-
 ## Quickstart
 
 Install the extension and go to your preferences. Add the settings 
@@ -42,7 +36,23 @@ Install the extension and go to your preferences. Add the settings
 - `Switch to Night Theme`
 	- switches the theme to `nightswitch.nightTheme`
 
+## Note for GitHub clones
+This extension requires the node module `suncalc`. Install it with 
+~~~
+npm install suncalc
+~~~
+in this folder. You'll also need the .vscode folder, which you can create using Yeoman or something.
+
 ## Changelog
+
+### 2.1.2
+Adds code to automatically check in the background every 5 minutes so your eyeballs aren't seared after returning.
+
+### 2.1.1
+Updates dependencies to patch security issue with one of them.
+
+### 2.1.0
+Fixes issue where theme would not consistently update after system sleep.
 
 ### 2.0.2
 Mistake in manual time settings, probably fixed now.

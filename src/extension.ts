@@ -5,14 +5,16 @@ const SunCalc = require('suncalc');
 
 var wbconfig = workspace.getConfiguration('workbench');
 var nsconfig = workspace.getConfiguration('nightswitch');
-var autoSwitch, time, hasShownEnableMsgOnce;
-const unreachable = [644, 105];
+var autoSwitch, hasShownEnableMsgOnce;
 
 export function activate(context: ExtensionContext)
 {
 	hasShownEnableMsgOnce = false;
 
-	autoSwitch = nsconfig.get<boolean>('autoSwitch')
+	autoSwitch = nsconfig.get<boolean>('autoSwitch');
+
+	recheck();
+
 	context.subscriptions.push(makeToggle());
 	context.subscriptions.push(makeSwitchDay());
 	context.subscriptions.push(makeSwitchNight());
@@ -21,19 +23,20 @@ export function activate(context: ExtensionContext)
 	context.subscriptions.push(window.onDidChangeActiveTextEditor(recheck));
 	context.subscriptions.push(window.onDidChangeTextEditorViewColumn(recheck));
 
-	recheck();
+	// recheck every 5 minutes
+	setInterval(recheck, 1000*60*5);
 	console.info('NightSwitch-Lite is now active!');
 }
 
 
-function parseManualTime(date: string, time: Date): number
+function parseManualTime(time: string, date: Date): number
 {
-	const hm = date.split(':')
-	const fullTime = time.getTime()
-	const currentHours = time.getHours() * 60 * 60 * 1000
-	const currentMinutes = time.getMinutes() * 60 * 1000
-	const currentSeconds = time.getSeconds() * 1000
-	const currentMilliseconds = time.getMilliseconds()
+	const hm = time.split(':');
+	const fullTime = date.getTime();
+	const currentHours = date.getHours() * 60 * 60 * 1000;
+	const currentMinutes = date.getMinutes() * 60 * 1000;
+	const currentSeconds = date.getSeconds() * 1000;
+	const currentMilliseconds = date.getMilliseconds();
 
 	const todayStart = fullTime - currentHours - currentMinutes - currentSeconds - currentMilliseconds
 
@@ -43,54 +46,13 @@ function parseManualTime(date: string, time: Date): number
 }
 
 
-function locationSwitch(coords: Number[], manualTimes: number[]) 
-{
-
-	// if autoSwitch is turned off then return immediately
-	if(!autoSwitch)
-	{
-		return;
-	}
-
-	// if coords are set then get the sun times
-	if(coords != unreachable)
-	{
-		var stimes = SunCalc.getTimes(time, coords[0], coords[1]);
-	}
-
-	// get the current time
-	const currtime = time.getTime()
-
-	let srise = manualTimes[0],
-		sset = manualTimes[1],
-		srisetmrw = manualTimes[2],
-		ssettmrw = manualTimes[3];
-
-	// if manual sunrise is not set and the coordinates are set then get the time of sunrise
-	if(srise === -1 && coords != unreachable)
-	{
-		srise = stimes.sunrise.getTime()
-	}
-
-	// get the time of sunset
-	if(sset === -1 && coords != unreachable)
-	{
-		sset = stimes.sunset.getTime();
-	}
-
-	timeSwitch(currtime, srise, sset)
-
-}
-
-
 function timeSwitch(currtime: number, srise: number, sset: number)
 {
 	const timeToSunrise = srise - currtime,
-		timeToSunset = sset - currtime;
+		 timeToSunset  = sset  - currtime;
 
 	if(timeToSunrise > 0)
 	{
-		// obviously give priority to sunrise
 		setThemeNight()
 	}
 	else if(timeToSunset > 0)
@@ -100,12 +62,7 @@ function timeSwitch(currtime: number, srise: number, sset: number)
 	else
 	{
 		// this means it's after sunset but before midnight
-		// if we are using manual time but dont specify one of them without location, then we don't assume anything
-
-		if(!(srise == -1 || sset == -1))
-		{
-			setThemeNight()
-		}
+		setThemeNight()
 	}
 }
 
@@ -184,8 +141,15 @@ function enableAutoSwitch()
 
 function parseCoordinates(coords: string): number[]
 {
-	const splcoords = coords.replace(/\(|\)/g, '').split(/,/);
-	return new Array(Number(splcoords[0]), Number(splcoords[1]))
+	if(coords != null)
+	{
+		const splcoords = coords.replace(/\(|\)/g, '').split(/,/);
+		return new Array(Number(splcoords[0]), Number(splcoords[1]))
+	}
+	else
+	{
+		return null;
+	}
 }
 
 
@@ -208,49 +172,70 @@ function showAutoSwitchMsg()
 
 function recheck()
 {
-	reloadConfig()
-	
-	const srisestr = nsconfig.get<string>('sunrise')
-	const ssetstr = nsconfig.get<string>('sunset')
-	
-	time = new Date()
 
-	let srisemanual = -1, 
-		ssetmanual = -1, 
-		srisetmrwmanual = -1, 
-		ssettmrwmanual = -1;
-
-	if(srisestr != null)
+	if(!autoSwitch)
 	{
-		srisemanual = parseManualTime(srisestr, time)
-		srisetmrwmanual = srisemanual + 24 * 60 * 60 * 1000
+		return;
 	}
 
-	if(ssetstr != null)
+	reloadConfig();
+
+	const currdate = new Date();
+	const coords = parseCoordinates(nsconfig.get<string>('location'));
+	if(coords != null && (Number.isNaN(coords[0]) || Number.isNaN(coords[1])))
 	{
-		ssetmanual = parseManualTime(ssetstr, time)
-		ssettmrwmanual = ssetmanual + 24 * 60 * 60 * 1000
+		window.showWarningMessage("Please set your coordinates in decimal degrees so that NightSwitch-lite can parse them (example: \"(49.89,-97.14)\").");
+		return;
 	}
 
-	const manualTimes = [srisemanual, ssetmanual, srisetmrwmanual, ssettmrwmanual]
+	let srisestr = nsconfig.get<string>('sunrise');
+	let ssetstr = nsconfig.get<string>('sunset');
 
-	if(nsconfig.get('location') != null)
+	let srisetime, ssettime;
+
+	if(coords != null)
 	{
-		const coords = parseCoordinates(nsconfig.get<string>('location'))
-		if(Number.isNaN(coords[0]) || Number.isNaN(coords[1]))
+		const calculatedTimes = SunCalc.getTimes(currdate, coords[0], coords[1]);
+		srisetime = calculatedTimes.sunrise.getTime();
+		ssettime = calculatedTimes.sunset.getTime();
+
+		if(srisestr != null)
 		{
-			window.showWarningMessage('Set your coordinates in the form \"(xxx.xxxx,yyy.yyyy)\" for proper usage of NightSwitch-lite.')
+			srisetime = parseManualTime(srisestr, currdate);
 		}
-		else
+
+		if(ssetstr != null)
 		{
-			locationSwitch(coords, manualTimes)
+			ssettime = parseManualTime(ssetstr, currdate);
 		}
 	}
-	else if(nsconfig.get('sunrise') != null || nsconfig.get('sunset') != null)
+	else
 	{
-		//set coords to unreachable value
-		locationSwitch(unreachable, manualTimes)
+		// if no coordiates are provided then provide default values if no manual times were provided
+		if(srisestr == null)
+		{
+			srisestr = "06:00";
+		}
+
+		if(ssetstr == null)
+		{
+			ssetstr = "18:00";
+		}
+
+		srisetime = parseManualTime(srisestr, currdate);
+		ssettime = parseManualTime(ssetstr, currdate);
+
 	}
+
+	if(Number.isNaN(srisetime) || Number.isNaN(ssettime))
+	{
+		window.showWarningMessage("Something went wrong with on of your manually set times. Please use the following 24-hour format: HH:MM.");
+		return;
+	}
+
+	
+	timeSwitch(currdate.getTime(), srisetime, ssettime);
+
 }
 
 
