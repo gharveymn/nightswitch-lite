@@ -43,7 +43,7 @@
                 "title": "Switch to Night Theme"
             },
             {
-                "command": "extension.enableAutoSwitch",
+                "command": "extension.autoSwitch",
                 "title": "Enable Automatic Theme Switching"
             }
         ],
@@ -61,33 +61,29 @@
                     "description": "Specifies which theme is to be shown during the night."
                 },
                 "nightswitch.location": {
-                    "type": [
-                        "string",
-                        "null"
-                    ],
+                    "type": "string",
                     "default": null,
-                    "description": "Specifies the user location in decimal degrees. Example input: \"(49.89,-97.14)\"."
+                    "description": "Specifies the user location in decimal degrees. Example input: 49.89,-97.14."
                 },
                 "nightswitch.sunrise": {
-                    "type": [
-                        "string",
-                        "null"
-                    ],
+                    "type": "string",
                     "default": null,
-                    "description": "Manually set the time of sunrise. Accepts 24-Hour format \"HH:MM\" (eg. \"06:30\")."
+                    "description": "Manually set the time of sunrise. Accepts 24-Hour format HH:MM (eg. 06:30)."
                 },
                 "nightswitch.sunset": {
-                    "type": [
-                        "string",
-                        "null"
-                    ],
+                    "type": "string",
                     "default": null,
-                    "description": "Manually set the time of sunset. Accepts 24-Hour format \"HH:MM\" (eg. \"18:30\")."
+                    "description": "Manually set the time of sunset. Accepts 24-Hour format HH:MM (eg. 18:30)."
                 },
                 "nightswitch.autoSwitch": {
                     "type": "boolean",
                     "default": true,
                     "description": "Automatically switch the theme to day or night (if VSCode has different theme in middle of day, automatically switches to nightswitch.dayTheme)."
+                },
+                "nightswitch.disableAutoSwitchNotifications": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Disable notifications when turning off auto-switch."
                 }
             }
         }

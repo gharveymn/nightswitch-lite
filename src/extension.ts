@@ -3,23 +3,20 @@ import {workspace, window, commands, ExtensionContext} from 'vscode';
 
 const SunCalc = require('suncalc');
 
-var wbconfig = workspace.getConfiguration('workbench');
-var nsconfig = workspace.getConfiguration('nightswitch');
-var autoSwitch, hasShownEnableMsgOnce, hasShownFixSettingsOnce;
+var wb_config = workspace.getConfiguration('workbench');
+var ns_config = workspace.getConfiguration('nightswitch');
+var has_shown_fix_settings_once;
 
 export function activate(context: ExtensionContext)
 {
-	hasShownEnableMsgOnce = false;
-	hasShownFixSettingsOnce = false;
-
-	autoSwitch = nsconfig.get<boolean>('autoSwitch');
+	has_shown_fix_settings_once = false;
 
 	recheck();
 
 	context.subscriptions.push(makeToggle());
-	context.subscriptions.push(makeSwitchDay());
-	context.subscriptions.push(makeSwitchNight());
-	context.subscriptions.push(enableAutoSwitch());
+	context.subscriptions.push(createCmdSwitchDay());
+	context.subscriptions.push(createCmdSwitchNight());
+	context.subscriptions.push(createCmdAutoSwitch());
 	context.subscriptions.push(window.onDidChangeWindowState(recheck));
 	context.subscriptions.push(window.onDidChangeActiveTextEditor(recheck));
 	context.subscriptions.push(window.onDidChangeTextEditorViewColumn(recheck));
@@ -33,30 +30,28 @@ export function activate(context: ExtensionContext)
 function parseManualTime(time: string, date: Date): number
 {
 	const hm = time.split(':');
-	const fullTime = date.getTime();
-	const currentHours = date.getHours() * 60 * 60 * 1000;
-	const currentMinutes = date.getMinutes() * 60 * 1000;
-	const currentSeconds = date.getSeconds() * 1000;
-	const currentMilliseconds = date.getMilliseconds();
+	const full_time = date.getTime();
+	const curr_hrs = date.getHours() * 60 * 60 * 1000;
+	const curr_mins = date.getMinutes() * 60 * 1000;
+	const curr_secs = date.getSeconds() * 1000;
+	const curr_ms = date.getMilliseconds();
 
-	const todayStart = fullTime - currentHours - currentMinutes - currentSeconds - currentMilliseconds
+	const today_start = full_time - curr_hrs - curr_mins - curr_secs - curr_ms;
 
-	const parsedTime = todayStart + (Number(hm[0]) * 60 * 60 * 1000) + (Number(hm[1]) * 60 * 1000)
-
-	return parsedTime
+	return today_start + (Number(hm[0]) * 60 * 60 * 1000) + (Number(hm[1]) * 60 * 1000);
 }
 
 
 function timeSwitch(currtime: number, srise: number, sset: number)
 {
-	const timeToSunrise = srise - currtime,
-		timeToSunset = sset - currtime;
+	const time_to_srise = srise - currtime,
+		 time_to_sset  = sset  - currtime;
 
-	if(timeToSunrise > 0)
+	if(time_to_srise > 0)
 	{
 		setThemeNight()
 	}
-	else if(timeToSunset > 0)
+	else if(time_to_sset > 0)
 	{
 		setThemeDay()
 	}
@@ -73,78 +68,69 @@ function makeToggle()
 	return commands.registerCommand('extension.toggleTheme', () =>
 	{
 		reloadConfig();
-		var currentTheme = wbconfig.get<string>('colorTheme')
+		var curr_theme = wb_config.get<string>('colorTheme')
 
-		if(currentTheme === nsconfig.get<string>('dayTheme'))
+		if(curr_theme === ns_config.get<string>('dayTheme'))
 		{
-			setThemeNight()
-			autoSwitch = false;
+			ns_config.update('autoSwitch', false, true);
+			setThemeNight();
+			showAutoSwitchMsg();
 		}
-		else if(currentTheme === nsconfig.get<string>('nightTheme'))
+		else if(curr_theme === ns_config.get<string>('nightTheme'))
 		{
-			setThemeDay()
-			autoSwitch = false;
+			ns_config.update('autoSwitch', false, true);
+			setThemeDay();
+			showAutoSwitchMsg();
 		}
 		else
 		{
-			window.showInformationMessage('Your current theme is not set to either your day or night theme. Please update your settings.');
+			window.showInformationMessage('Your current theme is set to neither your day nor your night theme. Please update your settings.');
 		}
-
-		if(!autoSwitch && !hasShownEnableMsgOnce)
-		{
-			showAutoSwitchMsg();
-		}
-
 	});
 }
 
-
-function makeSwitchDay()
+function switchDay()
 {
-	return commands.registerCommand('extension.switchDay', () =>
-	{
-		setThemeDay()
-		autoSwitch = false;
-
-		if(!hasShownEnableMsgOnce)
-		{
-			showAutoSwitchMsg();
-		}
-
-	});
+	ns_config.update('autoSwitch', false, true);
+	setThemeDay();
+	showAutoSwitchMsg();
 }
 
 
-function makeSwitchNight()
+function createCmdSwitchDay()
 {
-	return commands.registerCommand('extension.switchNight', () =>
-	{
-		setThemeNight()
-		autoSwitch = false;
-
-		if(!hasShownEnableMsgOnce)
-		{
-			showAutoSwitchMsg();
-		}
-
-	});
+	return commands.registerCommand('extension.switchDay', () => switchDay());
 }
 
-function enableAutoSwitch()
+function switchNight()
 {
-	return commands.registerCommand('extension.enableAutoSwitch', () =>
-	{
-		autoSwitch = true;
-		recheck();
-	});
+	ns_config.update('autoSwitch', false, true);
+	setThemeNight();
+	showAutoSwitchMsg();
+}
+
+function createCmdSwitchNight()
+{
+	return commands.registerCommand('extension.switchNight', () => switchNight());
+}
+
+function autoSwitch()
+{
+	ns_config.update('autoSwitch', true, true);
+	recheck();
+}
+
+function createCmdAutoSwitch()
+{
+	return commands.registerCommand('extension.autoSwitch', () => autoSwitch());
 }
 
 
 function parseCoordinates(coords: string): number[]
 {
-	if(coords != null)
+	if(coords)
 	{
-		const splcoords = coords.replace(/\(|\)/g, '').split(/,/);
+		const splcoords = coords.replace(/\(|\)| /g, '').split(/,/);
 		return new Array(Number(splcoords[0]), Number(splcoords[1]))
 	}
 	else
@@ -156,94 +142,110 @@ function parseCoordinates(coords: string): number[]
 
 function setThemeNight()
 {
-	wbconfig.update('colorTheme', nsconfig.get<string>('nightTheme'), true)
+	wb_config.update('colorTheme', ns_config.get<string>('nightTheme'), true)
 }
 
 
 function setThemeDay()
 {
-	wbconfig.update('colorTheme', nsconfig.get<string>('dayTheme'), true)
+	wb_config.update('colorTheme', ns_config.get<string>('dayTheme'), true)
 }
 
 function showAutoSwitchMsg()
 {
-	window.showInformationMessage('Automatic switching has been disabled. To reenable, use the command "Enable Automatic Theme Switching".', 'Click here to reenable').then(fulfilled => {autoSwitch = true; recheck();});
-	hasShownEnableMsgOnce = true;
+	if(!ns_config.get<boolean>('disableAutoSwitchNotifications'))
+	{
+		window.showInformationMessage('Automatic switching has been disabled for this session. ' +
+								'To reenable, use the command "Enable Automatic Theme Switching".', 
+								'Click here to reenable', 'Don\'t show this again'
+								).then(
+								function(str)
+								{
+									if(str === 'Click here to reenable')
+									{
+										autoSwitch();
+									}
+									else if(str === "Don't show this again")
+									{
+										ns_config.update('disableAutoSwitchNotifications', true, true);
+									}
+								});
+	}
 }
 
 function recheck()
 {
 
-	if(!autoSwitch)
+	if(!ns_config.get<boolean>('autoSwitch'))
 	{
 		return;
 	}
 
 	reloadConfig();
 
-	const currdate = new Date(),
-		coords = parseCoordinates(nsconfig.get<string>('location'));
+	const curr_date = new Date(),
+		 coords = parseCoordinates(ns_config.get<string>('location'));
 
-	let srisestr = nsconfig.get<string>('sunrise');
-	let ssetstr = nsconfig.get<string>('sunset');
+	let srise_str = ns_config.get<string>('sunrise');
+	let sset_str = ns_config.get<string>('sunset');
 
-	let srisetime, ssettime;
+	let srise_time, sset_time;
 
-	if(coords != null && (Number.isNaN(coords[0]) || Number.isNaN(coords[1])))
+	if(coords && (Number.isNaN(coords[0]) || Number.isNaN(coords[1])))
 	{
 		window.showWarningMessage("Please set your coordinates in decimal degrees so that NightSwitch-lite can parse them (example: \"(49.89,-97.14)\").");
 		return;
 	}
 
-	if(coords != null)
+	if(coords)
 	{
 
-		const tmp_hours = currdate.getHours();
-		currdate.setHours(12);
+		const tmp_hours = curr_date.getHours();
+		curr_date.setHours(12);
 
-		const calculatedTimes = SunCalc.getTimes(currdate, coords[0], coords[1]);
+		const calc_times = SunCalc.getTimes(curr_date, coords[0], coords[1]);
 
-		currdate.setHours(tmp_hours);
+		curr_date.setHours(tmp_hours);
 
-		srisetime = calculatedTimes.sunrise.getTime();
-		ssettime = calculatedTimes.sunset.getTime();
+		srise_time = calc_times.sunrise.getTime();
+		sset_time = calc_times.sunset.getTime();
 
 	}
 
 	// takes precedence over location-based
-	if(srisestr != null)
+	if(srise_str)
 	{
-		srisetime = parseManualTime(srisestr, currdate);
-		if(Number.isNaN(srisetime))
+		srise_time = parseManualTime(srise_str, curr_date);
+		if(Number.isNaN(srise_time))
 		{
 			window.showWarningMessage("Something went wrong with your manually set sunrise time. Please use 24-hour format (HH:MM).");
 			return;
 		}
 	}
 
-	if(ssetstr != null)
+	if(sset_str)
 	{
-		ssettime = parseManualTime(ssetstr, currdate);
-		if(Number.isNaN(ssettime))
+		sset_time = parseManualTime(sset_str, curr_date);
+		if(Number.isNaN(sset_time))
 		{
 			window.showWarningMessage("Something went wrong with your manually set sunset time. Please use 24-hour format (HH:MM).");
 			return;
 		}
 	}
 
-	if((typeof srisetime == "undefined") || typeof ssettime == "undefined")
+	if((typeof srise_time == "undefined") || typeof sset_time == "undefined")
 	{
-		if(!hasShownFixSettingsOnce)
+		if(!has_shown_fix_settings_once)
 		{
 			window.showInformationMessage("Please edit your settings to specify how NightSwitch-lite will locate you.",
 				"Go to settings").then(fulfilled => {commands.executeCommand("workbench.action.openSettings")});
-			hasShownFixSettingsOnce = true;
+			has_shown_fix_settings_once = true;
 		}
 		return;
 	}
 
 
-	timeSwitch(currdate.getTime(), srisetime, ssettime);
+	timeSwitch(curr_date.getTime(), srise_time, sset_time);
 
 }
 
@@ -251,7 +253,7 @@ function recheck()
 function reloadConfig()
 {
 	// get the current workbench configuration
-	wbconfig = workspace.getConfiguration('workbench');
+	wb_config = workspace.getConfiguration('workbench');
 	// get the user config for nightswitch
-	nsconfig = workspace.getConfiguration('nightswitch');
+	ns_config = workspace.getConfiguration('nightswitch');
 }
