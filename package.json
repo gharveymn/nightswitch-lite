@@ -1,8 +1,8 @@
 {
     "name": "nightswitch-lite",
-    "displayName": "NightSwitch-Lite",
+    "displayName": "NightSwitch-lite",
     "description": "Switches between day and night based on location/time specified by the user.",
-    "version": "2.1.5",
+    "version": "2.2.1",
     "publisher": "gharveymn",
     "author": {
         "name": "Gene Harvey",
@@ -35,11 +35,11 @@
                 "title": "Toggle Day/Night"
             },
             {
-                "command": "extension.switchDay",
+                "command": "extension.switchThemeDay",
                 "title": "Switch to Day Theme"
             },
             {
-                "command": "extension.switchNight",
+                "command": "extension.switchThemeNight",
                 "title": "Switch to Night Theme"
             },
             {
@@ -50,35 +50,35 @@
         "configuration": {
             "title": "NightSwitch-lite",
             "properties": {
-                "nightswitch.dayTheme": {
+                "nightswitch.themeDay": {
                     "type": "string",
                     "default": "Default Light+",
-                    "description": "Specifies which theme is to be shown during the day."
+                    "description": "Specify which theme is to be shown during the day."
                 },
-                "nightswitch.nightTheme": {
+                "nightswitch.themeNight": {
                     "type": "string",
                     "default": "Default Dark+",
-                    "description": "Specifies which theme is to be shown during the night."
+                    "description": "Specify which theme is to be shown during the night."
                 },
                 "nightswitch.location": {
                     "type": "string",
                     "default": null,
-                    "description": "Specifies the user location in decimal degrees. Example input: 49.89,-97.14."
+                    "description": "Specify your location. Support for most coordinate systems (eg. '49.89,-97.14', '49°53'24\" N, 97°8'24\" W', etc.)."
                 },
                 "nightswitch.sunrise": {
                     "type": "string",
                     "default": null,
-                    "description": "Manually set the time of sunrise. Accepts 24-Hour format HH:MM (eg. 06:30)."
+                    "description": "Manually set the time of sunrise, overriding location. Support for most time formats (eg. '06:00', '6AM', etc.)."
                 },
                 "nightswitch.sunset": {
                     "type": "string",
                     "default": null,
-                    "description": "Manually set the time of sunset. Accepts 24-Hour format HH:MM (eg. 18:30)."
+                    "description": "Manually set the time of sunrise, overriding location. Support for most time formats (eg. '18:00', '6PM', etc.)."
                 },
                 "nightswitch.autoSwitch": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Automatically switch the theme to day or night (if VSCode has different theme in middle of day, automatically switches to nightswitch.dayTheme)."
+                    "description": "Automatically switch the theme to day or night based on location or sunrise/sunset settings."
                 },
                 "nightswitch.disableAutoSwitchNotifications": {
                     "type": "boolean",
@@ -95,7 +95,8 @@
         "test": "node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "suncalc": "^1.8.0"
+        "suncalc": "^1.8.0",
+        "coordinate-parser": "1.0.2"
     },
     "devDependencies": {
         "@types/node": "^6.0.116",

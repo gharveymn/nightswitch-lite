@@ -2,43 +2,91 @@
 import {workspace, window, commands, ExtensionContext} from 'vscode';
 
 const SunCalc = require('suncalc');
+const Coordinates = require("coordinate-parser");
 
 var wb_config = workspace.getConfiguration('workbench');
 var ns_config = workspace.getConfiguration('nightswitch');
+var autoswitch_enabled;
+var show_autoswitch_msg_disabled;
 var has_shown_fix_settings_once;
 
 export function activate(context: ExtensionContext)
 {
+	autoswitch_enabled = ns_config.get('autoSwitch');
+	show_autoswitch_msg_disabled = ns_config.get('disableAutoSwitchNotifications');
 	has_shown_fix_settings_once = false;
 
-	recheck();
-
 	context.subscriptions.push(makeToggle());
-	context.subscriptions.push(createCmdSwitchDay());
-	context.subscriptions.push(createCmdSwitchNight());
+	context.subscriptions.push(createCmdswitchThemeDay());
+	context.subscriptions.push(createCmdswitchThemeNight());
 	context.subscriptions.push(createCmdAutoSwitch());
-	context.subscriptions.push(window.onDidChangeWindowState(recheck));
-	context.subscriptions.push(window.onDidChangeActiveTextEditor(recheck));
-	context.subscriptions.push(window.onDidChangeTextEditorViewColumn(recheck));
+	
+	window.onDidChangeWindowState(recheck);
+	window.onDidChangeActiveTextEditor(recheck);
+	window.onDidChangeTextEditorViewColumn(recheck);
+	workspace.onDidSaveTextDocument(function(d) {
+		if(d.fileName.split('\\').pop().split('\/').pop() === 'settings.json')
+		{
+			reloadNightSwitchConfig();
+			recheck();
+		}
+	});
 
 	// recheck every 5 minutes
 	setInterval(recheck, 1000 * 60 * 5);
-	console.info('NightSwitch-Lite is now active!');
 }
 
 
-function parseManualTime(time: string, date: Date): number
+function parseManualTime(time: string): number
 {
-	const hm = time.split(':');
-	const full_time = date.getTime();
-	const curr_hrs = date.getHours() * 60 * 60 * 1000;
-	const curr_mins = date.getMinutes() * 60 * 1000;
-	const curr_secs = date.getSeconds() * 1000;
-	const curr_ms = date.getMilliseconds();
+	const regex = /^(\d{1,2})(?:\:|\s*)(\d{2}|)\s*((?:AM|PM)|)$/;
+	const matches = regex.exec(time);
+	if(!matches || !matches[1])
+	{
+		// must be non-empty and must have hour
+		return null;
+	}
 
-	const today_start = full_time - curr_hrs - curr_mins - curr_secs - curr_ms;
+	const today_start = new Date().setHours(0, 0, 0, 0);
 
-	return today_start + (Number(hm[0]) * 60 * 60 * 1000) + (Number(hm[1]) * 60 * 1000);
+	let h = Number(matches[1]);
+
+	if(h < 0 || h >= 24)
+	{
+		return null;
+	}
+
+	if(matches[3].length != 0)
+	{
+		
+		if(h > 12)
+		{
+			return null;
+		}
+
+		h %= 12;
+		if(matches[3] === "PM")
+		{
+			h += 12;
+		}
+		// else if AM do nothing
+	}
+
+	let m = 0;
+
+	if(matches[2].length != 0)
+	{
+		m = Number(matches[2]);
+		if(m < 0 || m >= 60)
+		{
+			return null;
+		}
+	}
+
+	let h_mil = h * 60 * 60 * 1000;
+	let m_mil = m * 60 * 1000;
+
+	return today_start + h_mil + m_mil;
 }
 
 
@@ -68,19 +116,16 @@ function makeToggle()
 	return commands.registerCommand('extension.toggleTheme', () =>
 	{
 		reloadConfig();
-		var curr_theme = wb_config.get<string>('colorTheme')
-
-		if(curr_theme === ns_config.get<string>('dayTheme'))
+		var curr_theme = wb_config.get('colorTheme')
+		if(curr_theme === ns_config.get('themeDay'))
 		{
-			ns_config.update('autoSwitch', false, true);
+			showAutoSwitchMsg();
 			setThemeNight();
-			showAutoSwitchMsg();
 		}
-		else if(curr_theme === ns_config.get<string>('nightTheme'))
+		else if(curr_theme === ns_config.get('themeNight'))
 		{
-			ns_config.update('autoSwitch', false, true);
-			setThemeDay();
 			showAutoSwitchMsg();
+			setThemeDay();
 		}
 		else
 		{
@@ -89,34 +134,32 @@ function makeToggle()
 	});
 }
 
-function switchDay()
+function switchThemeDay()
 {
-	ns_config.update('autoSwitch', false, true);
+	showAutoSwitchMsg();
 	setThemeDay();
+}
+
+
+function createCmdswitchThemeDay()
+{
+	return commands.registerCommand('extension.switchThemeDay', () => switchThemeDay());
+}
+
+function switchThemeNight()
+{
 	showAutoSwitchMsg();
-}
-
-
-function createCmdSwitchDay()
-{
-	return commands.registerCommand('extension.switchDay', () => switchDay());
-}
-
-function switchNight()
-{
-	ns_config.update('autoSwitch', false, true);
 	setThemeNight();
-	showAutoSwitchMsg();
 }
 
-function createCmdSwitchNight()
+function createCmdswitchThemeNight()
 {
-	return commands.registerCommand('extension.switchNight', () => switchNight());
+	return commands.registerCommand('extension.switchThemeNight', () => switchThemeNight());
 }
 
 function autoSwitch()
 {
-	ns_config.update('autoSwitch', true, true);
+	autoswitch_enabled = true;
 	recheck();
 }
 
@@ -126,15 +169,15 @@ function createCmdAutoSwitch()
 }
 
 
-function parseCoordinates(coords: string): number[]
+function parseCoordinates(coords: string)
 {
-	if(coords)
+	try
 	{
-		const splcoords = coords.replace(/\(|\)| /g, '').split(/,/);
-		return new Array(Number(splcoords[0]), Number(splcoords[1]))
+		return new Coordinates(coords);
 	}
-	else
+	catch
 	{
+		window.showWarningMessage("Please set your coordinates in a valid format so that NightSwitch-lite can parse them (example: \"49.89,-97.14\").");
 		return null;
 	}
 }
@@ -142,18 +185,18 @@ function parseCoordinates(coords: string): number[]
 
 function setThemeNight()
 {
-	wb_config.update('colorTheme', ns_config.get<string>('nightTheme'), true)
+	wb_config.update('colorTheme', ns_config.get('themeNight'), true)
 }
 
 
 function setThemeDay()
 {
-	wb_config.update('colorTheme', ns_config.get<string>('dayTheme'), true)
+	wb_config.update('colorTheme', ns_config.get('themeDay'), true)
 }
 
 function showAutoSwitchMsg()
 {
-	if(!ns_config.get<boolean>('disableAutoSwitchNotifications'))
+	if(!show_autoswitch_msg_disabled && autoswitch_enabled)
 	{
 		window.showInformationMessage('Automatic switching has been disabled for this session. ' +
 								'To reenable, use the command "Enable Automatic Theme Switching".', 
@@ -167,43 +210,40 @@ function showAutoSwitchMsg()
 									}
 									else if(str === "Don't show this again")
 									{
+										show_autoswitch_msg_disabled = true;
 										ns_config.update('disableAutoSwitchNotifications', true, true);
 									}
 								});
 	}
+	autoswitch_enabled = false;
 }
 
 function recheck()
 {
-
-	if(!ns_config.get<boolean>('autoSwitch'))
+	if(!autoswitch_enabled)
 	{
 		return;
 	}
-
+	
 	reloadConfig();
 
-	const curr_date = new Date(),
-		 coords = parseCoordinates(ns_config.get<string>('location'));
+	const curr_date = new Date();
 
-	let srise_str = ns_config.get<string>('sunrise');
-	let sset_str = ns_config.get<string>('sunset');
+	const location_str = ns_config.get<string>('location');
+	const srise_str = ns_config.get<string>('sunrise');
+	const sset_str  = ns_config.get<string>('sunset');
 
 	let srise_time, sset_time;
 
-	if(coords && (Number.isNaN(coords[0]) || Number.isNaN(coords[1])))
+	if(location_str)
 	{
-		window.showWarningMessage("Please set your coordinates in decimal degrees so that NightSwitch-lite can parse them (example: \"(49.89,-97.14)\").");
-		return;
-	}
 
-	if(coords)
-	{
+		let coords = parseCoordinates(location_str);
 
 		const tmp_hours = curr_date.getHours();
 		curr_date.setHours(12);
 
-		const calc_times = SunCalc.getTimes(curr_date, coords[0], coords[1]);
+		const calc_times = SunCalc.getTimes(curr_date, coords.getLatitude(), coords.getLongitude());
 
 		curr_date.setHours(tmp_hours);
 
@@ -215,25 +255,25 @@ function recheck()
 	// takes precedence over location-based
 	if(srise_str)
 	{
-		srise_time = parseManualTime(srise_str, curr_date);
-		if(Number.isNaN(srise_time))
+		srise_time = parseManualTime(srise_str);
+		if(!srise_time || Number.isNaN(srise_time))
 		{
-			window.showWarningMessage("Something went wrong with your manually set sunrise time. Please use 24-hour format (HH:MM).");
+			window.showWarningMessage("Something went wrong with your manually set sunrise time. Please ensure you input a valid time.");
 			return;
 		}
 	}
 
 	if(sset_str)
 	{
-		sset_time = parseManualTime(sset_str, curr_date);
-		if(Number.isNaN(sset_time))
+		sset_time = parseManualTime(sset_str);
+		if(!sset_time || Number.isNaN(sset_time))
 		{
-			window.showWarningMessage("Something went wrong with your manually set sunset time. Please use 24-hour format (HH:MM).");
+			window.showWarningMessage("Something went wrong with your manually set sunset time. Please ensure you input a valid time.");
 			return;
 		}
 	}
 
-	if((typeof srise_time == "undefined") || typeof sset_time == "undefined")
+	if(typeof srise_time == "undefined" || typeof sset_time == "undefined")
 	{
 		if(!has_shown_fix_settings_once)
 		{
@@ -243,17 +283,32 @@ function recheck()
 		}
 		return;
 	}
-
-
 	timeSwitch(curr_date.getTime(), srise_time, sset_time);
-
 }
 
-
-function reloadConfig()
+function reloadWorkbenchConfig()
 {
 	// get the current workbench configuration
 	wb_config = workspace.getConfiguration('workbench');
+}
+
+function reloadNightSwitchConfig()
+{
 	// get the user config for nightswitch
-	ns_config = workspace.getConfiguration('nightswitch');
+	let new_ns_config = workspace.getConfiguration('nightswitch');
+	if(new_ns_config.get('autoSwitch') != ns_config.get('autoSwitch'))
+	{
+		autoswitch_enabled = new_ns_config.get('autoSwitch');
+	}
+	if(new_ns_config.get('disableAutoSwitchNotifications') != ns_config.get('disableAutoSwitchNotifications'))
+	{
+		show_autoswitch_msg_disabled = new_ns_config.get('disableAutoSwitchNotifications');
+	}
+	ns_config = new_ns_config;
+}
+
+function reloadConfig()
+{
+	reloadWorkbenchConfig();
+	reloadNightSwitchConfig();
 }
