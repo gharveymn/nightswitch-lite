@@ -1,7 +1,7 @@
 # Changelog
 
 ### 2.2.1
-Various code cleanup, better error notifications, upgrades settings so they appear with new VSCode settings page, add support for other coordinate systems and date formats
+Various code cleanup, better error notifications, upgrades settings so they appear with new VSCode settings page, add support for other coordinate systems and time formats
 
 ### 2.1.4
 Fixes bug where the sunrise and sunset calculations would be for the wrong day.

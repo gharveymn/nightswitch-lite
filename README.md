@@ -24,7 +24,7 @@ Install the extension and go to your preferences. Add the settings
 - `"nightswitch.sunset"`
 	- Manually sets the time to switch theme to night, overriding location. Support for most time formats  (eg. `'18:00'`, `'6PM'`, etc.).
 - `"nightswitch.autoSwitch"`
-	- Forces the theme to switch to currently canonical theme, ie. if it is day and you have your theme set to something other than `nightswitch.themeDay`, resets the theme to `nightswitch.themeDay` (default `true`).
+	- Automatically switches the theme to day or night based on location or sunrise/sunset settings. (default: `true`).
 
 
 ## Extension Commands
@@ -39,7 +39,7 @@ Install the extension and go to your preferences. Add the settings
 ## Changelog
 
 ### 2.2.1
-Various code cleanup, better error notifications, upgrades settings so they appear with new VSCode settings page, add support for other coordinate systems and date formats
+Various code cleanup, better error notifications, upgrades settings so they appear with new VSCode settings page, add support for other coordinate systems and time formats
 
 ### 2.1.4
 Fixes bug where the sunrise and sunset calculations would be for the wrong day.
