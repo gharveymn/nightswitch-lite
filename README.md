@@ -18,11 +18,11 @@ Install the extension and go to your preferences. Add the settings
 - `"nightswitch.themeNight"` 
 	- Sets the theme to be shown at night (eg. `'Default Dark+'`)
 - `"nightswitch.location"`
-	- Specifies a user defined geographic location. Support for most coordinate systems (eg. `'49.89,-97.14'`, `'49°53'24" N, 97°8'24" W'`, etc.).
+	- Specifies a user defined geographic location. Most coordinate systems are supported (eg. `'49.89,-97.14'`, `'49°53'24" N, 97°8'24" W'`, etc.).
 - `"nightswitch.sunrise"`
-	- Manually sets the time to switch theme to day, overriding location. Support for most time formats (eg. `'06:00'`, `'6AM'`, etc.).
+	- Manually sets the time to switch theme to day, overriding location. Most time formats are supported (eg. `'06:00'`, `'6AM'`, etc.).
 - `"nightswitch.sunset"`
-	- Manually sets the time to switch theme to night, overriding location. Support for most time formats  (eg. `'18:00'`, `'6PM'`, etc.).
+	- Manually sets the time to switch theme to night, overriding location. Most time formats are supported  (eg. `'18:00'`, `'6PM'`, etc.).
 - `"nightswitch.autoSwitch"`
 	- Automatically switches the theme to day or night based on location or sunrise/sunset settings. (default: `true`).
 

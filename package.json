@@ -63,17 +63,17 @@
                 "nightswitch.location": {
                     "type": "string",
                     "default": null,
-                    "description": "Specify your location. Support for most coordinate systems (eg. '49.89,-97.14', '49°53'24\" N, 97°8'24\" W', etc.)."
+                    "description": "Specify your location. Most coordinate systems are supported (eg. '49.89,-97.14', '49°53'24\" N, 97°8'24\" W', etc.)."
                 },
                 "nightswitch.sunrise": {
                     "type": "string",
                     "default": null,
-                    "description": "Manually set the time of sunrise, overriding location. Support for most time formats (eg. '06:00', '6AM', etc.)."
+                    "description": "Manually set the time of sunrise, overriding location. Most time formats are supported (eg. '06:00', '6AM', etc.)."
                 },
                 "nightswitch.sunset": {
                     "type": "string",
                     "default": null,
-                    "description": "Manually set the time of sunrise, overriding location. Support for most time formats (eg. '18:00', '6PM', etc.)."
+                    "description": "Manually set the time of sunrise, overriding location. Most time formats are supported (eg. '18:00', '6PM', etc.)."
                 },
                 "nightswitch.autoSwitch": {
                     "type": "boolean",
