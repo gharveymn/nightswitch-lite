@@ -53,12 +53,12 @@
                 "nightswitch.themeDay": {
                     "type": "string",
                     "default": "Default Light+",
-                    "description": "Specify which theme is to be shown during the day."
+                    "description": "Specify the theme to be used during the day."
                 },
                 "nightswitch.themeNight": {
                     "type": "string",
                     "default": "Default Dark+",
-                    "description": "Specify which theme is to be shown during the night."
+                    "description": "Specify the theme to be used during the night."
                 },
                 "nightswitch.location": {
                     "type": "string",
