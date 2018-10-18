@@ -115,14 +115,15 @@ function makeToggle()
 {
 	return commands.registerCommand('extension.toggleTheme', () =>
 	{
-		reloadConfig();
+		reloadWorkbenchConfig();
+		reloadNightSwitchConfig();
 		var curr_theme = wb_config.get('colorTheme')
-		if(curr_theme === ns_config.get('themeDay'))
+		if(curr_theme === getThemeDay())
 		{
 			showAutoSwitchMsg();
 			setThemeNight();
 		}
-		else if(curr_theme === ns_config.get('themeNight'))
+		else if(curr_theme === getThemeNight())
 		{
 			showAutoSwitchMsg();
 			setThemeDay();
@@ -185,13 +186,23 @@ function parseCoordinates(coords: string)
 
 function setThemeNight()
 {
-	wb_config.update('colorTheme', ns_config.get('themeNight'), true)
+	reloadWorkbenchConfig();
+	let theme_night = getThemeNight();
+	if(wb_config.get('colorTheme') !== theme_night)
+	{
+		wb_config.update('colorTheme', theme_night, true)
+	}
 }
 
 
 function setThemeDay()
 {
-	wb_config.update('colorTheme', ns_config.get('themeDay'), true)
+	reloadWorkbenchConfig();
+	let theme_day = getThemeDay();
+	if(wb_config.get('colorTheme') !== theme_day)
+	{
+		wb_config.update('colorTheme', theme_day, true)
+	}
 }
 
 function showAutoSwitchMsg()
@@ -225,7 +236,7 @@ function recheck()
 		return;
 	}
 	
-	reloadConfig();
+	reloadNightSwitchConfig();
 
 	const curr_date = new Date();
 
@@ -273,7 +284,7 @@ function recheck()
 		}
 	}
 
-	if(typeof srise_time == "undefined" || typeof sset_time == "undefined")
+	if(srise_time === undefined || sset_time === undefined)
 	{
 		if(!has_shown_fix_settings_once)
 		{
@@ -284,6 +295,44 @@ function recheck()
 		return;
 	}
 	timeSwitch(curr_date.getTime(), srise_time, sset_time);
+}
+
+function getThemeDay()
+{
+	let theme_day_old;
+	let td_inspect = ns_config.inspect('themeDay');
+	if(td_inspect.globalValue)
+	{
+		return td_inspect.globalValue;
+	}
+	else if((theme_day_old = ns_config.get('dayTheme')) !== undefined)
+	{
+		ns_config.update('themeDay', theme_day_old, true);
+		return theme_day_old;
+	}
+	else
+	{
+		return td_inspect.defaultValue;
+	}
+}
+
+function getThemeNight()
+{
+	let theme_night_old;
+	let tn_inspect = ns_config.inspect('themeNight');
+	if(tn_inspect.globalValue)
+	{
+		return tn_inspect.globalValue;
+	}
+	else if((theme_night_old = ns_config.get('nightTheme')) !== undefined)
+	{
+		ns_config.update('themeNight', theme_night_old, true);
+		return theme_night_old;
+	}
+	else
+	{
+		return tn_inspect.defaultValue;
+	}
 }
 
 function reloadWorkbenchConfig()
@@ -305,10 +354,4 @@ function reloadNightSwitchConfig()
 		show_autoswitch_msg_disabled = new_ns_config.get('disableAutoSwitchNotifications');
 	}
 	ns_config = new_ns_config;
-}
-
-function reloadConfig()
-{
-	reloadWorkbenchConfig();
-	reloadNightSwitchConfig();
 }

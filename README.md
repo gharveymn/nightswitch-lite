@@ -13,9 +13,9 @@ Install the extension and go to your preferences. Add the settings
 
 ## Extension Settings
 
-- `"nightswitch.themeDay"` 
+- `"nightswitch.themeDay"`
 	- Sets the theme to be shown during the day (eg. `'Solarized Light'`)
-- `"nightswitch.themeNight"` 
+- `"nightswitch.themeNight"`
 	- Sets the theme to be shown at night (eg. `'Default Dark+'`)
 - `"nightswitch.location"`
 	- Specifies a user defined geographic location. Most coordinate systems are supported (eg. `'49.89,-97.14'`, `'49°53'24" N, 97°8'24" W'`, etc.).
