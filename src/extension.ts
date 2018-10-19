@@ -16,11 +16,12 @@ export function activate(context: ExtensionContext)
 	show_autoswitch_msg_disabled = ns_config.get('disableAutoSwitchNotifications');
 	has_shown_fix_settings_once = false;
 
-	context.subscriptions.push(makeToggle());
-	createCmdswitchThemeDay();
-	createCmdswitchThemeNight();
+	createCmdToggle();
+	createCmdSwitchThemeDay();
+	createCmdSwitchThemeNight();
 	createCmdAutoSwitch();
-	
+	createCmdFirstTimeSetup();
+
 	window.onDidChangeWindowState(recheck);
 	window.onDidChangeActiveTextEditor(recheck);
 	window.onDidChangeTextEditorViewColumn(recheck);
@@ -111,7 +112,7 @@ function timeSwitch(currtime: number, srise: number, sset: number)
 }
 
 
-function makeToggle()
+function createCmdToggle()
 {
 	return commands.registerCommand('extension.toggleTheme', () =>
 	{
@@ -135,16 +136,32 @@ function makeToggle()
 	});
 }
 
+
+function createCmdSwitchThemeDay()
+{
+	return commands.registerCommand('extension.switchThemeDay', () => switchThemeDay());
+}
+
+function createCmdSwitchThemeNight()
+{
+	return commands.registerCommand('extension.switchThemeNight', () => switchThemeNight());
+}
+
+
+function createCmdAutoSwitch()
+{
+	return commands.registerCommand('extension.enableAutoSwitch', () => autoSwitch());
+}
+
+function createCmdFirstTimeSetup()
+{
+	return commands.registerCommand('extension.firstTimeSetup', () => firstTimeSetup());
+}
+
 function switchThemeDay()
 {
 	disableAutoSwitch();
 	setThemeDay();
-}
-
-
-function createCmdswitchThemeDay()
-{
-	return commands.registerCommand('extension.switchThemeDay', () => switchThemeDay());
 }
 
 function switchThemeNight()
@@ -153,20 +170,10 @@ function switchThemeNight()
 	setThemeNight();
 }
 
-function createCmdswitchThemeNight()
-{
-	return commands.registerCommand('extension.switchThemeNight', () => switchThemeNight());
-}
-
 function autoSwitch()
 {
 	autoswitch_enabled = true;
 	recheck();
-}
-
-function createCmdAutoSwitch()
-{
-	return commands.registerCommand('extension.autoSwitch', () => autoSwitch());
 }
 
 

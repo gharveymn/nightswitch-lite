@@ -32,19 +32,23 @@
         "commands": [
             {
                 "command": "extension.toggleTheme",
-                "title": "Toggle Day/Night"
+                "title": "NightSwitch-lite: Toggle Day/Night"
             },
             {
                 "command": "extension.switchThemeDay",
-                "title": "Switch to Day Theme"
+                "title": "NightSwitch-lite: Switch to Day Theme"
             },
             {
                 "command": "extension.switchThemeNight",
-                "title": "Switch to Night Theme"
+                "title": "NightSwitch-lite: Switch to Night Theme"
             },
             {
-                "command": "extension.autoSwitch",
-                "title": "Enable Automatic Theme Switching"
+                "command": "extension.enableAutoSwitch",
+                "title": "NightSwitch-lite: Enable Automatic Theme Switching"
+            },
+            {
+                "command": "extension.firstTimeSetup",
+                "title": "NightSwitch-lite: Run First Time Setup"
             }
         ],
         "configuration": {
