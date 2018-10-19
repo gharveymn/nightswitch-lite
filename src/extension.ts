@@ -17,9 +17,9 @@ export function activate(context: ExtensionContext)
 	has_shown_fix_settings_once = false;
 
 	context.subscriptions.push(makeToggle());
-	context.subscriptions.push(createCmdswitchThemeDay());
-	context.subscriptions.push(createCmdswitchThemeNight());
-	context.subscriptions.push(createCmdAutoSwitch());
+	createCmdswitchThemeDay();
+	createCmdswitchThemeNight();
+	createCmdAutoSwitch();
 	
 	window.onDidChangeWindowState(recheck);
 	window.onDidChangeActiveTextEditor(recheck);
@@ -120,12 +120,12 @@ function makeToggle()
 		var curr_theme = wb_config.get('colorTheme')
 		if(curr_theme === getThemeDay())
 		{
-			showAutoSwitchMsg();
+			disableAutoSwitch();
 			setThemeNight();
 		}
 		else if(curr_theme === getThemeNight())
 		{
-			showAutoSwitchMsg();
+			disableAutoSwitch();
 			setThemeDay();
 		}
 		else
@@ -137,7 +137,7 @@ function makeToggle()
 
 function switchThemeDay()
 {
-	showAutoSwitchMsg();
+	disableAutoSwitch();
 	setThemeDay();
 }
 
@@ -149,7 +149,7 @@ function createCmdswitchThemeDay()
 
 function switchThemeNight()
 {
-	showAutoSwitchMsg();
+	disableAutoSwitch();
 	setThemeNight();
 }
 
@@ -205,7 +205,7 @@ function setThemeDay()
 	}
 }
 
-function showAutoSwitchMsg()
+function disableAutoSwitch()
 {
 	if(!show_autoswitch_msg_disabled && autoswitch_enabled)
 	{
@@ -288,14 +288,69 @@ function recheck()
 	{
 		if(!has_shown_fix_settings_once)
 		{
-			window.showInformationMessage("Please edit your settings to specify how NightSwitch-lite will locate you.",
-				"Go to settings").then(fulfilled => {commands.executeCommand("workbench.action.openSettings")});
+			window.showInformationMessage("You have not specified a location for NightSwitch-lite to use. Would you like to go through the setup? You can manually set it up later by going to your settings.",
+				"Setup", "Go to settings.json").then(selection => {
+					if(selection === "Setup")
+					{
+						firstTimeSetup();
+					}
+					else if(selection === "Go to settings.json")
+					{
+						commands.executeCommand("workbench.action.openSettings");
+					}
+				});
 			has_shown_fix_settings_once = true;
 		}
 		return;
 	}
 	timeSwitch(curr_date.getTime(), srise_time, sset_time);
 }
+
+
+async function firstTimeSetup()
+{
+	// location
+	await window.showInputBox(
+		{
+			ignoreFocusOut: true, 
+			placeHolder: 'eg. "49.89,-97.14"',
+			prompt: "Specify your location"
+		}).then(loc_str => {
+			if(loc_str !== undefined && loc_str)
+			{
+				ns_config.update('location', loc_str, true);
+			}
+		});
+	
+	// themeDay
+	await window.showInputBox(
+		{
+			ignoreFocusOut: true, 
+			placeHolder: 'Default Light+', 
+			prompt: "Specify your day theme"
+		}).then(theme_day => {
+			if(theme_day !== undefined && theme_day)
+			{
+				ns_config.update('themeDay', theme_day, true);
+			}
+		});
+
+
+	// themeNight
+	await window.showInputBox(
+		{
+			ignoreFocusOut: true, 
+			placeHolder: 'Default Dark+', 
+			prompt: "Specify your night theme"
+		}).then(theme_night => {
+			if(theme_night !== undefined && theme_night)
+			{
+				ns_config.update('themeNight', theme_night, true);
+			}			
+		});
+}
+
+
 
 function getThemeDay()
 {
