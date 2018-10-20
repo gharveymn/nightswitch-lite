@@ -1,5 +1,6 @@
 'use strict';
 import {workspace, window, commands, ExtensionContext} from 'vscode';
+import {stringify} from 'querystring';
 
 const SunCalc = require('suncalc');
 const Coordinates = require("coordinate-parser");
@@ -218,11 +219,11 @@ function disableAutoSwitch()
 	{
 		window.showInformationMessage('Automatic switching has been disabled for this session. ' +
 								'To reenable, use the command "Enable Automatic Theme Switching".', 
-								'Click here to reenable', 'Don\'t show this again'
+								'Re-enable', "Don't show this again"
 								).then(
 								function(str)
 								{
-									if(str === 'Click here to reenable')
+									if(str === 'Re-enable')
 									{
 										autoSwitch();
 									}
@@ -333,7 +334,7 @@ async function firstTimeSetup()
 	await window.showInputBox(
 		{
 			ignoreFocusOut: true, 
-			placeHolder: 'Default Light+', 
+			placeHolder: ns_config.get<string>('themeDay'), 
 			prompt: "Specify your day theme"
 		}).then(theme_day => {
 			if(theme_day !== undefined && theme_day)
@@ -347,7 +348,7 @@ async function firstTimeSetup()
 	await window.showInputBox(
 		{
 			ignoreFocusOut: true, 
-			placeHolder: 'Default Dark+', 
+			placeHolder: ns_config.get<string>('themeNight'), 
 			prompt: "Specify your night theme"
 		}).then(theme_night => {
 			if(theme_night !== undefined && theme_night)

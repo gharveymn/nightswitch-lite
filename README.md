@@ -4,12 +4,7 @@ This is a lighter version of [NightSwitch](https://marketplace.visualstudio.com/
 
 ## Quickstart
 
-Install the extension and go to your preferences. Add the settings 
-~~~
-"nightswitch.themeDay": "[YourDayTheme]"
-"nightswitch.themeNight": "[YourNightTheme]"
-"nightswitch.location": "[YourLatitude],[YourLongitude]"
-~~~
+Install the extension. After reloading you should be greeted with a popup asking if you want to run the setup. From there you can set your location, and the theme you want to see during the day/night. You can also edit your preferences at any time for the same effect.
 
 ## Extension Settings
 
@@ -26,15 +21,18 @@ Install the extension and go to your preferences. Add the settings
 - `"nightswitch.autoSwitch"`
 	- Automatically switches the theme to day or night based on location or sunrise/sunset settings. (default: `true`).
 
-
 ## Extension Commands
 
-- `Toggle Day/Night`
+- `Toggle Day/Night Theme`
 	- toggles the theme between day and night
 - `Switch to Day Theme`
 	- switches the theme to `nightswitch.themeDay`
 - `Switch to Night Theme`
 	- switches the theme to `nightswitch.themeNight`
+- `Enable Automatic Theme Switching`
+	- turns on automatic switching based on the time
+- `Run First Time Setup`
+	- runs the first time setup prompts
 
 ## Changelog
 

@@ -1,7 +1,7 @@
 {
     "name": "nightswitch-lite",
     "displayName": "NightSwitch-lite",
-    "description": "Switches between day and night based on location/time specified by the user.",
+    "description": "Switch between day and night themes based on location/time specified by the user.",
     "version": "2.2.1",
     "publisher": "gharveymn",
     "author": {
@@ -32,7 +32,7 @@
         "commands": [
             {
                 "command": "extension.toggleTheme",
-                "title": "NightSwitch-lite: Toggle Day/Night"
+                "title": "NightSwitch-lite: Toggle Day/Night Theme"
             },
             {
                 "command": "extension.switchThemeDay",
