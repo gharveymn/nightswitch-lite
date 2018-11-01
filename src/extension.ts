@@ -1,6 +1,5 @@
 'use strict';
 import {workspace, window, commands, ExtensionContext} from 'vscode';
-import {stringify} from 'querystring';
 
 const SunCalc = require('suncalc');
 const Coordinates = require("coordinate-parser");
@@ -8,20 +7,25 @@ const Coordinates = require("coordinate-parser");
 var wb_config = workspace.getConfiguration('workbench');
 var ns_config = workspace.getConfiguration('nightswitch');
 var autoswitch_enabled;
-var show_autoswitch_msg_disabled;
+var has_shown_autoswitch_disabled_msg;
 var has_shown_fix_settings_once;
 
 export function activate(context: ExtensionContext)
 {
 	autoswitch_enabled = ns_config.get('autoSwitch');
-	show_autoswitch_msg_disabled = ns_config.get('disableAutoSwitchNotifications');
+	has_shown_autoswitch_disabled_msg = ns_config.get('disableAutoSwitchNotifications');
 	has_shown_fix_settings_once = false;
 
-	createCmdToggle();
+	createCmdSetup();
+	createCmdToggleTheme();
 	createCmdSwitchThemeDay();
 	createCmdSwitchThemeNight();
 	createCmdAutoSwitch();
-	createCmdFirstTimeSetup();
+	createCmdSetConfigLocation();
+	createCmdSetConfigThemeDay();
+	createCmdSetConfigThemeNight();
+	createCmdSetConfigSunrise();
+	createCmdSetConfigSunset();
 
 	window.onDidChangeWindowState(recheck);
 	window.onDidChangeActiveTextEditor(recheck);
@@ -113,7 +117,7 @@ function timeSwitch(currtime: number, srise: number, sset: number)
 }
 
 
-function createCmdToggle()
+function createCmdToggleTheme()
 {
 	return commands.registerCommand('extension.toggleTheme', () =>
 	{
@@ -137,7 +141,6 @@ function createCmdToggle()
 	});
 }
 
-
 function createCmdSwitchThemeDay()
 {
 	return commands.registerCommand('extension.switchThemeDay', () => switchThemeDay());
@@ -148,15 +151,116 @@ function createCmdSwitchThemeNight()
 	return commands.registerCommand('extension.switchThemeNight', () => switchThemeNight());
 }
 
-
 function createCmdAutoSwitch()
 {
-	return commands.registerCommand('extension.enableAutoSwitch', () => autoSwitch());
+	return commands.registerCommand('extension.toggleAutoSwitch', () => toggleAutoSwitchEnabled());
 }
 
-function createCmdFirstTimeSetup()
+function createCmdSetup()
 {
-	return commands.registerCommand('extension.firstTimeSetup', () => firstTimeSetup());
+	return commands.registerCommand('extension.setup', () => setup());
+}
+
+function createCmdSetConfigLocation()
+{
+	return commands.registerCommand('extension.setLocation', () => setConfigLocation());
+}
+
+function createCmdSetConfigThemeDay()
+{
+	return commands.registerCommand('extension.setThemeDay', () => setConfigThemeDay());
+}
+
+function createCmdSetConfigThemeNight()
+{
+	return commands.registerCommand('extension.setThemeNight', () => setConfigThemeNight());
+}
+
+function createCmdSetConfigSunrise()
+{
+	return commands.registerCommand('extension.setSunrise', () => setConfigSunrise());
+}
+
+function createCmdSetConfigSunset()
+{
+	return commands.registerCommand('extension.setSunset', () => setConfigSunset());
+}
+
+async function setConfigLocation()
+{
+	let loc_str = await window.showInputBox({
+			ignoreFocusOut: true,
+			placeHolder: "Example: 49.89,-97.14",
+			value: ns_config.get<string>('location'),
+			prompt: "Specify your location"
+		})
+	if(loc_str !== undefined)
+	{
+		await ns_config.update('location', loc_str, true);
+	}
+	recheck();
+}
+
+async function setConfigThemeDay()
+{
+	let theme_day = await window.showInputBox(
+		{
+			ignoreFocusOut: true,
+			value: ns_config.get<string>('themeDay'),
+			prompt: "Specify your day theme"
+		})
+	if(theme_day !== undefined)
+	{
+		await ns_config.update('themeDay', theme_day, true);
+	}
+	recheck();
+}
+
+async function setConfigThemeNight()
+{
+	let theme_night = await window.showInputBox(
+		{
+			ignoreFocusOut: true, 
+			value: ns_config.get<string>('themeNight'), 
+			prompt: "Specify your night theme"
+		})
+	if(theme_night !== undefined)
+	{
+		await ns_config.update('themeNight', theme_night, true);
+	}
+	recheck();
+}
+
+async function setConfigSunrise()
+{
+	let sr_str = await window.showInputBox(
+		{
+			ignoreFocusOut: true, 
+			placeHolder: "Example: 6:00 AM",
+			value: ns_config.get<string>('sunrise'),
+			prompt: "Specify the time of sunrise"
+		})
+	if(sr_str !== undefined)
+	{
+		await ns_config.update('sunrise', sr_str, true);
+	}
+	recheck();
+}
+
+async function setConfigSunset()
+{
+	let ss_str = await window.showInputBox(
+		{
+			ignoreFocusOut: true, 
+			placeHolder: "Example: 8:00 PM",
+			value: ns_config.get<string>('sunset'),
+			prompt: "Specify the time of sunset"
+		})
+	if(ss_str !== undefined)
+	{
+		await ns_config.update('sunset', ss_str, true);
+	}
+	recheck();
 }
 
 function switchThemeDay()
@@ -171,9 +275,9 @@ function switchThemeNight()
 	setThemeNight();
 }
 
-function autoSwitch()
+function toggleAutoSwitchEnabled()
 {
-	autoswitch_enabled = true;
+	autoswitch_enabled = !autoswitch_enabled;
 	recheck();
 }
 
@@ -215,32 +319,37 @@ function setThemeDay()
 
 function disableAutoSwitch()
 {
-	if(!show_autoswitch_msg_disabled && autoswitch_enabled)
+	if(autoswitch_enabled)
 	{
-		window.showInformationMessage('Automatic switching has been disabled for this session. ' +
-								'To reenable, use the command "Enable Automatic Theme Switching".', 
-								'Re-enable', "Don't show this again"
-								).then(
-								function(str)
-								{
-									if(str === 'Re-enable')
+		autoswitch_enabled = false;
+		if(!has_shown_autoswitch_disabled_msg)
+		{
+			window.showInformationMessage('Automatic switching has been disabled for this session. ' +
+									'To reenable, use the command "Enable Automatic Theme Switching".', 
+									'Re-Enable', "Don't show this again"
+									).then(
+									function(str)
 									{
-										autoSwitch();
-									}
-									else if(str === "Don't show this again")
-									{
-										show_autoswitch_msg_disabled = true;
-										ns_config.update('disableAutoSwitchNotifications', true, true);
-									}
-								});
+										if(str === 'Re-Enable')
+										{
+											autoswitch_enabled = true;
+											recheck();
+										}
+										else if(str === "Don't show this again")
+										{
+											has_shown_autoswitch_disabled_msg = true;
+											ns_config.update('disableAutoSwitchNotifications', true, true);
+										}
+									});
+		}
 	}
-	autoswitch_enabled = false;
 }
 
 function recheck()
 {
 	if(!autoswitch_enabled)
 	{
+		// dont do anything
 		return;
 	}
 	
@@ -300,7 +409,7 @@ function recheck()
 				"Setup", "Go to settings.json").then(selection => {
 					if(selection === "Setup")
 					{
-						firstTimeSetup();
+						setup();
 					}
 					else if(selection === "Go to settings.json")
 					{
@@ -315,47 +424,18 @@ function recheck()
 }
 
 
-async function firstTimeSetup()
+async function setup()
 {
-	// location
-	await window.showInputBox(
-		{
-			ignoreFocusOut: true, 
-			placeHolder: 'eg. "49.89,-97.14"',
-			prompt: "Specify your location"
-		}).then(loc_str => {
-			if(loc_str !== undefined && loc_str)
-			{
-				ns_config.update('location', loc_str, true);
-			}
-		});
-	
-	// themeDay
-	await window.showInputBox(
-		{
-			ignoreFocusOut: true, 
-			placeHolder: ns_config.get<string>('themeDay'), 
-			prompt: "Specify your day theme"
-		}).then(theme_day => {
-			if(theme_day !== undefined && theme_day)
-			{
-				ns_config.update('themeDay', theme_day, true);
-			}
-		});
 
+	// themeDay
+	await setConfigThemeDay();
 
 	// themeNight
-	await window.showInputBox(
-		{
-			ignoreFocusOut: true, 
-			placeHolder: ns_config.get<string>('themeNight'), 
-			prompt: "Specify your night theme"
-		}).then(theme_night => {
-			if(theme_night !== undefined && theme_night)
-			{
-				ns_config.update('themeNight', theme_night, true);
-			}			
-		});
+	await setConfigThemeNight();
+
+	// location
+	await setConfigLocation();
+	
 }
 
 
@@ -414,7 +494,7 @@ function reloadNightSwitchConfig()
 	}
 	if(new_ns_config.get('disableAutoSwitchNotifications') != ns_config.get('disableAutoSwitchNotifications'))
 	{
-		show_autoswitch_msg_disabled = new_ns_config.get('disableAutoSwitchNotifications');
+		has_shown_autoswitch_disabled_msg = new_ns_config.get('disableAutoSwitchNotifications');
 	}
 	ns_config = new_ns_config;
 }

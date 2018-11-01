@@ -43,12 +43,32 @@
                 "title": "NightSwitch-lite: Switch to Night Theme"
             },
             {
-                "command": "extension.enableAutoSwitch",
-                "title": "NightSwitch-lite: Enable Automatic Theme Switching"
+                "command": "extension.toggleAutoSwitch",
+                "title": "NightSwitch-lite: Toggle Automatic Theme Switching"
             },
             {
-                "command": "extension.firstTimeSetup",
-                "title": "NightSwitch-lite: Run First Time Setup"
+                "command": "extension.setup",
+                "title": "NightSwitch-lite: Run Setup"
+            },
+            {
+                "command": "extension.setLocation",
+                "title": "NightSwitch-lite: Set Location"
+            },
+            {
+                "command": "extension.setThemeDay",
+                "title": "NightSwitch-lite: Set Day Theme"
+            },
+            {
+                "command": "extension.setThemeNight",
+                "title": "NightSwitch-lite: Set Night Theme"
+            },
+            {
+                "command": "extension.setSunrise",
+                "title": "NightSwitch-lite: Set Time of Sunrise"
+            },
+            {
+                "command": "extension.setSunset",
+                "title": "NightSwitch-lite: Set Time of Sunset"
             }
         ],
         "configuration": {
