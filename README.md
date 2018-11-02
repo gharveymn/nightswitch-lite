@@ -46,6 +46,9 @@ Install the extension. After reloading you should be greeted with a popup asking
 
 ## Changelog
 
+### 2.2.2
+Adds a check to startup so you don't have to click for it to switch
+
 ### 2.2.1
 Various code cleanup, better error notifications, upgrades settings so they appear with new VSCode settings page, add support for other coordinate systems and time formats
 

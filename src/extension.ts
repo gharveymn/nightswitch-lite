@@ -40,6 +40,8 @@ export function activate(context: ExtensionContext)
 
 	// recheck every 5 minutes
 	setInterval(recheck, 1000 * 60 * 5);
+	recheck();
+
 }
 
 
