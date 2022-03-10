@@ -2,7 +2,7 @@
     "name": "nightswitch-lite",
     "displayName": "NightSwitch-lite",
     "description": "Switch between day and night themes based on location/time specified by the user.",
-    "version": "2.3.0",
+    "version": "2.3.1",
     "publisher": "gharveymn",
     "author": {
         "name": "Gene Harvey",
