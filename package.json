@@ -113,19 +113,24 @@
         }
     },
     "scripts": {
-        "vscode:prepublish": "tsc -p ./",
+        "vscode:prepublish": "npm run esbuild-base -- --minify",
         "compile": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "node ./node_modules/vscode/bin/test"
+        "test": "node ./node_modules/vscode/bin/test",
+        "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/src/extension.js --external:vscode --format=cjs --platform=node",
+        "esbuild": "npm run esbuild-base -- --sourcemap",
+        "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+        "test-compile": "tsc -p ./"
     },
     "dependencies": {
-        "suncalc": "^1.8.0",
-        "coordinate-parser": "1.0.2"
+        "coordinate-parser": "1.0.2",
+        "suncalc": "^1.8.0"
     },
     "devDependencies": {
         "@types/node": "^6.14.13",
-        "typescript": "^3.7.2",
-        "vscode": "^1.1.37"
+        "@types/vscode": "^1.16.0",
+        "esbuild": "^0.14.25",
+        "typescript": "^3.7.2"
     },
     "__metadata": null,
     "extensionKind": [

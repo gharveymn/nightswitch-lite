@@ -304,7 +304,7 @@ function setTheme(section: string)
 	if(wb_config.get('colorTheme') !== theme_name)
 	{
 		let theme_config_info = ns_config.inspect(section);
-		let target;
+		let target : ConfigurationTarget;
 		if(theme_config_info.workspaceFolderValue !== undefined)
 		{
 			target = ConfigurationTarget.WorkspaceFolder;
